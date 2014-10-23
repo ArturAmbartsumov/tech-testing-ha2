@@ -2,7 +2,7 @@
 
 import sys
 import unittest
-from tests.example_test import SeleniumTest
+from tests.selenium_test import SeleniumTest
 
 
 if __name__ == '__main__':

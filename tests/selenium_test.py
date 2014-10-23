@@ -3,7 +3,7 @@ import time
 import os
 import unittest
 from selenium.webdriver import DesiredCapabilities, Remote
-from tests.page_objects.page_object import AuthPage, CreatePage, CampaignsListPage
+from tests.page_objects.page_object import AuthPage, CreatePage, CampaignsListPage, EditPage
 
 
 class SeleniumTest(unittest.TestCase):
@@ -14,6 +14,8 @@ class SeleniumTest(unittest.TestCase):
     PASS_WORD = os.environ['TTHA2PASSWORD']
     DOMAIN = '@bk.ru'
     PRODUCT_TYPE = 4
+    SNG = 'sng'
+    AGE_RESTRICT = '18+'
 
     def setUp(self):
         browser = os.environ.get('TTHA2BROWSER', 'CHROME')
@@ -24,9 +26,9 @@ class SeleniumTest(unittest.TestCase):
         )
 
     def tearDown(self):
-        #camp_list_page = CampaignsListPage(self.driver)
-        #camp_list_page.open()
-        #camp_list_page.campaigns_list.delete_all()
+        camp_list_page = CampaignsListPage(self.driver)
+        camp_list_page.open()
+        camp_list_page.campaigns_list.delete_all()
         self.driver.quit()
 
     def login(self):
@@ -48,7 +50,7 @@ class SeleniumTest(unittest.TestCase):
         banner_form.set_url(self.BANNER_URL)
         banner_form.set_image(os.path.join(self.BASE_DIR, self.BANNER_IMG))
 
-    def test_login(self):
+    def est_login(self):
         self.login()
 
         camp_list_page = CampaignsListPage(self.driver)
@@ -57,7 +59,7 @@ class SeleniumTest(unittest.TestCase):
 
         self.assertEqual(self.USER_NAME, user_name)
 
-    def test_create_company(self):
+    def est_create_company(self):
         self.login()
 
         camp_name = datetime.now().strftime("%Y.%m.%d %H:%M:%S")
@@ -79,8 +81,7 @@ class SeleniumTest(unittest.TestCase):
 
         self.assertTrue(is_campaign_exist, 'campaign not exist')
 
-
-    def test_create_company_where(self):
+    def est_create_company_where(self):
         self.login()
 
         camp_name = datetime.now().strftime("%Y.%m.%d %H:%M:%S")
@@ -92,7 +93,7 @@ class SeleniumTest(unittest.TestCase):
         self.set_default_settings(create_page, camp_name)
 
         where_settings = create_page.where_settings
-        where_settings.select_present('sng')
+        where_settings.select_present(self.SNG)
 
         create_page.create_button.create()
 
@@ -101,8 +102,44 @@ class SeleniumTest(unittest.TestCase):
         camp_list_page.open()
 
         campaigns_list = camp_list_page.campaigns_list
-        is_campaign_exist = campaigns_list.is_campaign_exist(camp_name)
+        camp = campaigns_list.get_campaign(camp_name)
+        camp_id = camp.get_campaign_id()
 
-        self.assertTrue(is_campaign_exist, 'campaign not exist')
+        #Edit page
+        edit_page = EditPage(self.driver, camp_id)
+        edit_page.open()
+
+        selected_present = edit_page.where_settings.get_selected_present()
+
+        self.assertEqual(self.SNG, selected_present)
+        time.sleep(10)
         # ## And some examples
         # create_page.slider.move(100)
+
+    def test_create_company_left_slider(self):
+        self.login()
+
+        camp_name = datetime.now().strftime("%Y.%m.%d %H:%M:%S")
+
+        #Create page
+        create_page = CreatePage(self.driver)
+        create_page.open()
+
+        self.set_default_settings(create_page, camp_name)
+
+        age_restrictions = create_page.age_restrictions
+        age_restrictions.set_age_restrictions(self.AGE_RESTRICT)
+
+        create_page.create_button.create()
+
+        #Campains list page
+        campaigns_list_page = CampaignsListPage(self.driver)
+        camp = campaigns_list_page.campaigns_list.get_campaign(camp_name)
+        camp_id = camp.get_campaign_id()
+
+        #Edit page
+        edit_page = EditPage(self.driver, camp_id)
+        edit_page.open()
+
+        expected_age = edit_page.age_restrictions.get_setting_value()
+        self.assertEqual(self.AGE_RESTRICT, expected_age)

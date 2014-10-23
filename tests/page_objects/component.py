@@ -130,11 +130,11 @@ class CampaignsList(Component):
     def __init__(self, driver):
         super(CampaignsList, self).__init__(driver)
 
-        self.campaigns_ul = WebDriverWait(self.driver, 30, 0.1).until(
+        self.context = WebDriverWait(self.driver, 30, 0.1).until(
             lambda d: d.find_element_by_css_selector(self.CAMPAIGNS_UL)
         )
 
-        element_list = WebDriverWait(self.campaigns_ul, 30, 0.1).until(
+        element_list = WebDriverWait(self.context, 30, 0.1).until(
             lambda d: d.find_elements_by_css_selector(self.CAMPAIGN_LI)
         )
         self.campaigns_list = []
@@ -159,24 +159,27 @@ class CampaignsList(Component):
 
 
 class Campaign(Component):
-    CAMPAIGN_TITLE_DIV = '.campaign-title__name'
+    CAMPAIGN_NAME_DIV = '.campaign-title__name'
     DELETE_BUTTON = '.control__preset_delete'
     name = None
+    campaign_id = None
 
     def __init__(self, driver, campaign_li):
         super(Campaign, self).__init__(driver)
-
-        self.campaign_li = campaign_li
+        self.context = campaign_li
 
     def campaign_name(self):
-        if not self.name:
-            self.name = WebDriverWait(self.campaign_li, 30, 0.1).until(
-                lambda d: d.find_element_by_css_selector(self.CAMPAIGN_TITLE_DIV).text
+        if self.name is None:
+            self.name = WebDriverWait(self.context, 30, 0.1).until(
+                lambda d: d.find_element_by_css_selector(self.CAMPAIGN_NAME_DIV).text
             )
         return self.name
 
+    def get_campaign_id(self):
+        return self.context.get_attribute("data-id")
+
     def delete_campaign(self):
-        delete_button = WebDriverWait(self.campaign_li, 30, 0.1).until(
+        delete_button = WebDriverWait(self.context, 30, 0.1).until(
             lambda d: d.find_element_by_css_selector(self.DELETE_BUTTON)
         )
         delete_button.click()
@@ -185,6 +188,7 @@ class Campaign(Component):
 class WhereSettings(Component):
     PRESENT_LIST_UI = '.campaign-setting__preset-list'
     PRESENT_LI = '.campaign-setting__preset'
+    SELECTED_PRESENT_LI = '.campaign-setting__preset_selected'
 
     def __init__(self, driver):
         super(WhereSettings, self).__init__(driver)
@@ -200,3 +204,47 @@ class WhereSettings(Component):
         for present in presents_list:
             if present.get_attribute("data-name") == data_name:
                 present.click()
+
+    def get_selected_present(self):
+        presents = WebDriverWait(self.context, 30, 0.1).until(
+            lambda d: d.find_element_by_css_selector(self.SELECTED_PRESENT_LI)
+        )
+        return presents.get_attribute("data-name")
+
+
+class AgeRestrictions(Component):
+    RESTRICT_DIV = '.campaign-setting__wrapper_restrict'
+    SETTINGS_VALUE_SPAN = '.campaign-setting__value'
+    RESTRICT_RADIO = '.campaign-setting__input'
+
+    def __init__(self, driver):
+        super(AgeRestrictions, self).__init__(driver)
+        self.context = WebDriverWait(self.driver, 30, 0.1).until(
+            lambda d: d.find_element_by_css_selector(self.RESTRICT_DIV) if d.find_element_by_css_selector(
+                self.RESTRICT_DIV).is_displayed() else None
+        )
+
+    def set_age_restrictions(self, age):
+        self.open()
+        restricts_list = WebDriverWait(self.context, 30, 0.1).until(
+            lambda d: d.find_elements_by_css_selector(self.RESTRICT_RADIO) if d.find_element_by_css_selector(
+                self.RESTRICT_RADIO).is_displayed() else None
+        )
+        for restrict in restricts_list:
+            if restrict.get_attribute("data-value") == age:
+                restrict.click()
+                return
+
+    def open(self):
+        setting_value_component = self.get_setting_value_component()
+        setting_value_component.click()
+
+    def get_setting_value_component(self):
+        setting_value_comp = WebDriverWait(self.context, 30, 0.1).until(
+            lambda d: d.find_element_by_css_selector(self.SETTINGS_VALUE_SPAN) if d.find_element_by_css_selector(
+                self.SETTINGS_VALUE_SPAN).is_displayed() else None
+        )
+        return setting_value_comp
+
+    def get_setting_value(self):
+        return self.get_setting_value_component().text

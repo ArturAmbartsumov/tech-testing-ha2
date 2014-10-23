@@ -1,6 +1,6 @@
 import urlparse
 from tests.page_objects.component import AuthForm, TopMenu, Slider, BaseSettings, BannerForm, CreateButton, \
-    CampaignsList, WhereSettings
+    CampaignsList, WhereSettings, AgeRestrictions
 
 
 class Page(object):
@@ -50,6 +50,10 @@ class CreatePage(Page):
     def where_settings(self):
         return WhereSettings(self.driver)
 
+    @property
+    def age_restrictions(self):
+        return AgeRestrictions(self.driver)
+
 
 class CampaignsListPage(Page):
     PATH = '/ads/campaigns/'
@@ -69,9 +73,17 @@ class EditPage(Page):
 
     def __init__(self, driver, campaign_id):
         super(EditPage, self).__init__(driver)
-        self.PATH = urlparse.urljoin(self.PATH, str(campaign_id))
-        self.PATH = urlparse.urljoin(self.PATH, self.SUF)
+        self.PATH += campaign_id
+        self.PATH += self.SUF
 
     def open(self):
         url = urlparse.urljoin(self.BASE_URL, self.PATH)
         self.driver.get(url)
+
+    @property
+    def where_settings(self):
+        return WhereSettings(self.driver)
+
+    @property
+    def age_restrictions(self):
+        return AgeRestrictions(self.driver)
