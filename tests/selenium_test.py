@@ -50,7 +50,7 @@ class SeleniumTest(unittest.TestCase):
         banner_form.set_url(self.BANNER_URL)
         banner_form.set_image(os.path.join(self.BASE_DIR, self.BANNER_IMG))
 
-    def est_login(self):
+    def test_login(self):
         self.login()
 
         camp_list_page = CampaignsListPage(self.driver)
@@ -59,7 +59,7 @@ class SeleniumTest(unittest.TestCase):
 
         self.assertEqual(self.USER_NAME, user_name)
 
-    def est_create_company(self):
+    def test_create_company(self):
         self.login()
 
         camp_name = datetime.now().strftime("%Y.%m.%d %H:%M:%S")
@@ -81,7 +81,7 @@ class SeleniumTest(unittest.TestCase):
 
         self.assertTrue(is_campaign_exist, 'campaign not exist')
 
-    def est_create_company_where(self):
+    def test_create_company_where(self):
         self.login()
 
         camp_name = datetime.now().strftime("%Y.%m.%d %H:%M:%S")
@@ -112,9 +112,6 @@ class SeleniumTest(unittest.TestCase):
         selected_present = edit_page.where_settings.get_selected_present()
 
         self.assertEqual(self.SNG, selected_present)
-        time.sleep(10)
-        # ## And some examples
-        # create_page.slider.move(100)
 
     def test_create_company_left_slider(self):
         self.login()
