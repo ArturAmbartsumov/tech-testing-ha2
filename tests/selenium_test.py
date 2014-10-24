@@ -113,7 +113,7 @@ class SeleniumTest(unittest.TestCase):
 
         self.assertEqual(self.SNG, selected_present)
 
-    def test_create_company_left_slider(self):
+    def test_create_company_age_restrictions(self):
         self.login()
 
         camp_name = datetime.now().strftime("%Y.%m.%d %H:%M:%S")
